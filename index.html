@@ -88,13 +88,11 @@
   );
 
   // 3. Restore session from password recovery link
-  (async () => {
-    const { data, error } = await supabase.auth.getSessionFromUrl({ storeSession: true });
-    if (error) {
-      console.error("Error parsing recovery URL:", error.message);
+  if (error) {
+      console.error("Session exchange failed:", error.message);
       document.getElementById("error-message").textContent = "Error: " + error.message;
     } else {
-      console.log("✅ Session restored:", data);
+      console.log("✅ Session restored", data);
     }
   })();
 
