@@ -84,18 +84,36 @@
 
   // Restore session using Supabase password recovery tokens
   async function restoreSession() {
+    const hash = window.location.hash.substring(1); // everything after #
+    const params = new URLSearchParams(hash);
+
+    const accessToken = params.get("access_token");
+    const refreshToken = params.get("refresh_token");
+
+    if (!accessToken || !refreshToken) {
+      document.getElementById("error-message").textContent =
+        "Invalid or missing password reset token.";
+      return null;
+    }
+
     try {
-      const { data, error } = await supabase.auth.exchangeCodeForSession(window.location.hash);
+      const { data, error } = await supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken,
+      });
+
       if (error) {
-        console.error("Session exchange failed:", error.message);
-        document.getElementById("error-message").textContent = "Error: " + error.message;
+        console.error("Session restore failed:", error.message);
+        document.getElementById("error-message").textContent =
+          "Error: " + error.message;
         return null;
       }
       console.log("✅ Session restored", data);
       return data;
     } catch (err) {
       console.error("Unexpected error during session restore:", err);
-      document.getElementById("error-message").textContent = "An unexpected error occurred.";
+      document.getElementById("error-message").textContent =
+        "An unexpected error occurred.";
       return null;
     }
   }
@@ -142,7 +160,7 @@
         errorMessage.textContent = `Error: ${error.message}`;
       } else {
         alert('🎉 Password successfully reset! You can now log in with your new password.');
-        // Optional: redirect after success
+        // Optional redirect:
         // window.location.href = "/login.html";
       }
     } catch (err) {
