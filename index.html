@@ -72,66 +72,16 @@
   </form>
 </div>
 
-<!-- Load Supabase JS library -->
+<!-- Supabase JS v2 -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-  // Initialize Supabase client
+  // Initialize Supabase client with anon key (safe for client-side)
   const supabase = window.supabase.createClient(
     "https://yqcxumvpvosrqwbcdcun.supabase.co",
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlxY3h1bXZwdm9zcnF3YmNkY3VuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0MjU2NDIsImV4cCI6MjA3MDAwMTY0Mn0.gHBxTmOvCCCDqIIZM9gpSvsxvBnUmTRUngcK0pTQ1Tk"
+    "YOUR_ANON_PUBLIC_KEY_HERE"
   );
 
-  // Restore session using Supabase password recovery tokens
-  async function restoreSession() {
-    try {
-    const { data, error } = await supabase.auth.setSessionFromUrl({ storeSession: true });
-
-    if (error) {
-      console.error("Session restore failed:", error.message);
-      document.getElementById("error-message").textContent = "Error: " + error.message;
-      return null;
-    }
-    console.log("✅ Session restored", data);
-    return data;
-  } catch (err) {
-    console.error("Unexpected error during session restore:", err);
-    document.getElementById("error-message").textContent = "An unexpected error occurred.";
-    return null;
-  }
-
-    const accessToken = params.get("access_token");
-    const refreshToken = params.get("refresh_token");
-
-    if (!accessToken || !refreshToken) {
-      document.getElementById("error-message").textContent =
-        "Invalid or missing password reset token.";
-      return null;
-    }
-
-    try {
-      const { data, error } = await supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken,
-      });
-
-      if (error) {
-        console.error("Session restore failed:", error.message);
-        document.getElementById("error-message").textContent =
-          "Error: " + error.message;
-        return null;
-      }
-      console.log("✅ Session restored", data);
-      return data;
-    } catch (err) {
-      console.error("Unexpected error during session restore:", err);
-      document.getElementById("error-message").textContent =
-        "An unexpected error occurred.";
-      return null;
-    }
-  }
-
-  // Handle form submission
   const form = document.getElementById('password-reset-form');
   const passwordInput = document.getElementById('password');
   const confirmPasswordInput = document.getElementById('confirm-password');
@@ -158,27 +108,19 @@
     submitButton.disabled = true;
     submitButton.textContent = 'Resetting...';
 
-    // Restore session before updating password
-    const sessionData = await restoreSession();
-    if (!sessionData) {
-      submitButton.disabled = false;
-      submitButton.textContent = 'Reset Password';
-      return;
-    }
-
     try {
+      // Update password for the currently signed-in user (Supabase handles recovery session automatically)
       const { error } = await supabase.auth.updateUser({ password: newPassword });
 
       if (error) {
         errorMessage.textContent = `Error: ${error.message}`;
       } else {
         alert('🎉 Password successfully reset! You can now log in with your new password.');
-        // Optional redirect:
-        // window.location.href = "/login.html";
+        window.location.href = "/login.html"; // redirect to login
       }
     } catch (err) {
-      errorMessage.textContent = 'An unexpected error occurred.';
       console.error(err);
+      errorMessage.textContent = 'An unexpected error occurred.';
     } finally {
       submitButton.disabled = false;
       submitButton.textContent = 'Reset Password';
