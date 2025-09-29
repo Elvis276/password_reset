@@ -23,7 +23,7 @@
     }
     h2 {
       text-align: center;
-      color: #1abc9c; /* Supabase-like green */
+      color: #1abc9c;
       margin-bottom: 20px;
     }
     label {
@@ -60,42 +60,61 @@
   </style>
 </head>
 <body>
-
 <div class="container">
   <h2>Set New Password</h2>
   <form id="password-reset-form">
-    
     <label for="password">New Password</label>
     <input type="password" id="password" required>
-    
     <label for="confirm-password">Confirm Password</label>
     <input type="password" id="confirm-password" required>
-    
     <button type="submit" id="submit-button">Reset Password</button>
-    
     <p class="message" id="error-message"></p>
   </form>
 </div>
 
-<!-- 1. Load Supabase JS library -->
+<!-- Load Supabase JS library -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-  // 2. Initialize Supabase client with your project URL + anon/public key
+  // Initialize Supabase client
   const supabase = window.supabase.createClient(
-    "https://yqcxumvpvosrqwbcdcun.supabase.co",   // 🔑 Replace with your Supabase project URL
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlxY3h1bXZwdm9zcnF3YmNkY3VuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0MjU2NDIsImV4cCI6MjA3MDAwMTY0Mn0.gHBxTmOvCCCDqIIZM9gpSvsxvBnUmTRUngcK0pTQ1Tk" // 🔑 Replace with your anon/public key
+    "https://yqcxumvpvosrqwbcdcun.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlxY3h1bXZwdm9zcnF3YmNkY3VuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0MjU2NDIsImV4cCI6MjA3MDAwMTY0Mn0.gHBxTmOvCCCDqIIZM9gpSvsxvBnUmTRUngcK0pTQ1Tk"
   );
 
-  // 3. Restore session from password recovery link
-  if (error) {
-      console.error("Session exchange failed:", error.message);
-      document.getElementById("error-message").textContent = "Error: " + error.message;
-    } else {
-      console.log("✅ Session restored", data);
-    }
-  })();
+  // Extract token from URL parameters (e.g., from password reset link)
+  const urlParams = new URLSearchParams(window.location.search);
+  const accessToken = urlParams.get('access_token');
+  const refreshToken = urlParams.get('refresh_token');
 
+  // Restore session using the token from the password reset link
+  async function restoreSession() {
+    if (!accessToken || !refreshToken) {
+      document.getElementById("error-message").textContent = "Invalid or missing password reset token.";
+      return null;
+    }
+
+    try {
+      const { data, error } = await supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken,
+      });
+
+      if (error) {
+        console.error("Session exchange failed:", error.message);
+        document.getElementById("error-message").textContent = "Error: " + error.message;
+        return null;
+      }
+      console.log("✅ Session restored", data);
+      return data;
+    } catch (err) {
+      console.error("Unexpected error during session restore:", err);
+      document.getElementById("error-message").textContent = "An unexpected error occurred.";
+      return null;
+    }
+  }
+
+  // Handle form submission
   const form = document.getElementById('password-reset-form');
   const passwordInput = document.getElementById('password');
   const confirmPasswordInput = document.getElementById('confirm-password');
@@ -122,8 +141,15 @@
     submitButton.disabled = true;
     submitButton.textContent = 'Resetting...';
 
+    // Restore session before updating password
+    const sessionData = await restoreSession();
+    if (!sessionData) {
+      submitButton.disabled = false;
+      submitButton.textContent = 'Reset Password';
+      return;
+    }
+
     try {
-      // 4. Now session is valid → update the password
       const { error } = await supabase.auth.updateUser({ password: newPassword });
 
       if (error) {
@@ -142,6 +168,5 @@
     }
   });
 </script>
-
 </body>
 </html>
