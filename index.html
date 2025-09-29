@@ -1,131 +1,97 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Reset Password</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      background-color: #f4f4f9;
-    }
-    .container {
-      background: #fff;
-      padding: 30px;
-      border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      width: 100%;
-      max-width: 400px;
-    }
-    h2 {
-      text-align: center;
-      color: #1abc9c;
-      margin-bottom: 20px;
-    }
-    label {
-      display: block;
-      margin-bottom: 5px;
-      font-weight: bold;
-    }
-    input[type="password"] {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 15px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      box-sizing: border-box;
-    }
-    button {
-      width: 100%;
-      padding: 10px;
-      background-color: #1abc9c;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 16px;
-    }
-    button:hover {
-      background-color: #148f77;
-    }
-    .message {
-      text-align: center;
-      color: red;
-      margin-top: 10px;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reset Password</title>
+<style>
+body { font-family: Arial; display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: #f4f4f9; }
+.container { background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+h2 { text-align: center; color: #1abc9c; margin-bottom: 20px; }
+label { display: block; margin-bottom: 5px; font-weight: bold; }
+input[type="password"] { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+button { width: 100%; padding: 10px; background-color: #1abc9c; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+button:hover { background-color: #148f77; }
+.message { text-align: center; color: red; margin-top: 10px; }
+</style>
 </head>
 <body>
 <div class="container">
-  <h2>Set New Password</h2>
-  <form id="password-reset-form">
-    <label for="password">New Password</label>
-    <input type="password" id="password" required>
-    <label for="confirm-password">Confirm Password</label>
-    <input type="password" id="confirm-password" required>
-    <button type="submit" id="submit-button">Reset Password</button>
-    <p class="message" id="error-message"></p>
-  </form>
+<h2>Set New Password</h2>
+<form id="password-reset-form">
+<label for="password">New Password</label>
+<input type="password" id="password" required>
+<label for="confirm-password">Confirm Password</label>
+<input type="password" id="confirm-password" required>
+<button type="submit" id="submit-button">Reset Password</button>
+<p class="message" id="error-message"></p>
+</form>
 </div>
 
-<!-- Supabase JS v2 -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <script>
-  // Initialize Supabase client with anon key (safe for client-side)
-  const supabase = window.supabase.createClient(
-    "https://yqcxumvpvosrqwbcdcun.supabase.co",
-    "YOUR_ANON_PUBLIC_KEY_HERE"
-  );
+// Initialize Supabase
+const supabase = window.supabase.createClient(
+  "https://yqcxumvpvosrqwbcdcun.supabase.co",
+  "YOUR_ANON_PUBLIC_KEY_HERE"
+);
 
-  const form = document.getElementById('password-reset-form');
-  const passwordInput = document.getElementById('password');
-  const confirmPasswordInput = document.getElementById('confirm-password');
-  const errorMessage = document.getElementById('error-message');
-  const submitButton = document.getElementById('submit-button');
+const errorMessage = document.getElementById("error-message");
+const form = document.getElementById("password-reset-form");
+const passwordInput = document.getElementById("password");
+const confirmPasswordInput = document.getElementById("confirm-password");
+const submitButton = document.getElementById("submit-button");
 
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    errorMessage.textContent = '';
+// Extract tokens from URL
+const urlParams = new URLSearchParams(window.location.search);
+const accessToken = urlParams.get("access_token");
+const refreshToken = urlParams.get("refresh_token");
 
-    const newPassword = passwordInput.value;
-    const confirmPassword = confirmPasswordInput.value;
+if (!accessToken || !refreshToken) {
+  errorMessage.textContent = "Invalid or missing password reset token.";
+}
 
-    if (newPassword !== confirmPassword) {
-      errorMessage.textContent = 'Passwords do not match.';
-      return;
-    }
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  errorMessage.textContent = "";
 
-    if (newPassword.length < 6) {
-      errorMessage.textContent = 'Password must be at least 6 characters.';
-      return;
-    }
+  const newPassword = passwordInput.value;
+  const confirmPassword = confirmPasswordInput.value;
 
-    submitButton.disabled = true;
-    submitButton.textContent = 'Resetting...';
+  if (newPassword !== confirmPassword) {
+    errorMessage.textContent = "Passwords do not match.";
+    return;
+  }
+  if (newPassword.length < 6) {
+    errorMessage.textContent = "Password must be at least 6 characters.";
+    return;
+  }
 
-    try {
-      // Update password for the currently signed-in user (Supabase handles recovery session automatically)
-      const { error } = await supabase.auth.updateUser({ password: newPassword });
+  submitButton.disabled = true;
+  submitButton.textContent = "Resetting...";
 
-      if (error) {
-        errorMessage.textContent = `Error: ${error.message}`;
-      } else {
-        alert('🎉 Password successfully reset! You can now log in with your new password.');
-        window.location.href = "/login.html"; // redirect to login
-      }
-    } catch (err) {
-      console.error(err);
-      errorMessage.textContent = 'An unexpected error occurred.';
-    } finally {
-      submitButton.disabled = false;
-      submitButton.textContent = 'Reset Password';
-    }
-  });
+  try {
+    // Set temporary session from the recovery token
+    const { error: sessionError } = await supabase.auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    });
+    if (sessionError) throw sessionError;
+
+    // Update password
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) throw error;
+
+    alert("🎉 Password successfully reset! You can now log in with your new password.");
+    window.location.href = "/login.html"; // redirect to login
+  } catch (err) {
+    console.error(err);
+    errorMessage.textContent = "Error: " + err.message;
+  } finally {
+    submitButton.disabled = false;
+    submitButton.textContent = "Reset Password";
+  }
+});
 </script>
 </body>
 </html>
