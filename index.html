@@ -77,87 +77,66 @@
     </form>
 </div>
 
+<!-- 1. Load Supabase JS library -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script>
-    // -------------------------------------------------------------------------
-    // IMPORTANT: You must include your Supabase client library here.
-    // For a real application, you would load the Supabase JavaScript SDK
-    // and initialize your 'supabase' client object.
-    // e.g., <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    // -------------------------------------------------------------------------
+  // 2. Initialize Supabase client with your project URL + anon/public key
+  const supabase = window.supabase.createClient(
+    "https://yqcxumvpvosrqwbcdcun.supabase.co",   // 🔑 Replace with your Supabase project URL
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlxY3h1bXZwdm9zcnF3YmNkY3VuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0MjU2NDIsImV4cCI6MjA3MDAwMTY0Mn0.gHBxTmOvCCCDqIIZM9gpSvsxvBnUmTRUngcK0pTQ1Tk"                  // 🔑 Replace with your anon/public key
+  );
 
-    // 🚨 Placeholder for your initialized Supabase client
-    // Replace this with your actual client initialization!
-    const supabase = {
-        auth: {
-            updateUser: async (attributes) => {
-                // In a real app, this is where the API call happens.
-                // Since the user is logged in via the recovery link, 
-                // this will update their password.
-                console.log("Attempting to update password to:", attributes.password);
-                
-                // Simulate a successful API response
-                // Replace this with the actual Supabase call:
-                // const { data, error } = await YOUR_SUPABASE_CLIENT.auth.updateUser(attributes);
-                
-                // For this example, we'll always return success.
-                return { data: { user: { id: '123' } }, error: null };
-            }
-        }
-    };
+  const form = document.getElementById('password-reset-form');
+  const passwordInput = document.getElementById('password');
+  const confirmPasswordInput = document.getElementById('confirm-password');
+  const errorMessage = document.getElementById('error-message');
+  const submitButton = document.getElementById('submit-button');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorMessage.textContent = '';
     
-    const form = document.getElementById('password-reset-form');
-    const passwordInput = document.getElementById('password');
-    const confirmPasswordInput = document.getElementById('confirm-password');
-    const errorMessage = document.getElementById('error-message');
-    const submitButton = document.getElementById('submit-button');
+    const newPassword = passwordInput.value;
+    const confirmPassword = confirmPasswordInput.value;
 
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        errorMessage.textContent = '';
-        
-        const newPassword = passwordInput.value;
-        const confirmPassword = confirmPasswordInput.value;
+    if (newPassword !== confirmPassword) {
+      errorMessage.textContent = 'Passwords do not match.';
+      return;
+    }
 
-        if (newPassword !== confirmPassword) {
-            errorMessage.textContent = 'Passwords do not match.';
-            return;
-        }
-        
-        if (newPassword.length < 6) { // Basic validation
-             errorMessage.textContent = 'Password must be at least 6 characters.';
-            return;
-        }
-        
-        submitButton.disabled = true;
-        submitButton.textContent = 'Resetting...';
+    if (newPassword.length < 6) {
+      errorMessage.textContent = 'Password must be at least 6 characters.';
+      return;
+    }
 
-        try {
-            // 💡 When a user clicks the recovery link, Supabase *automatically* // signs them in with a temporary session. We just need to call updateUser.
-            const { error } = await supabase.auth.updateUser({ 
-                password: newPassword 
-            });
+    submitButton.disabled = true;
+    submitButton.textContent = 'Resetting...';
 
-            if (error) {
-                errorMessage.textContent = `Error: ${error.message}`;
-            } else {
-                // SUCCESS POP-UP
-                alert('🎉 Password successfully reset! You can now log in with your new password.'); 
-                
-                // Optionally redirect to the login page after success
-                // window.location.href = '/login'; 
-            }
-        } catch (err) {
-            errorMessage.textContent = 'An unexpected error occurred.';
-            console.error(err);
-        } finally {
-            submitButton.disabled = false;
-            submitButton.textContent = 'Reset Password';
-        }
-    });
+    try {
+      // 3. Supabase automatically signs user in when they click the recovery link
+      // So here we just update the password
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
 
-    // NOTE: In a real app, you would also use supabase.auth.onAuthStateChange 
-    // to verify the 'PASSWORD_RECOVERY' event before showing the form.
+      if (error) {
+        errorMessage.textContent = `Error: ${error.message}`;
+      } else {
+        alert('🎉 Password successfully reset! You can now log in with your new password.');
+        // Optionally redirect:
+        // window.location.href = "/login.html";
+      }
+    } catch (err) {
+      errorMessage.textContent = 'An unexpected error occurred.';
+      console.error(err);
+    } finally {
+      submitButton.disabled = false;
+      submitButton.textContent = 'Reset Password';
+    }
+  });
 </script>
+
 
 </body>
 </html>
