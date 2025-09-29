@@ -1,80 +1,80 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reset Password</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background-color: #f4f4f9;
-        }
-        .container {
-            background: #fff;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 400px;
-        }
-        h2 {
-            text-align: center;
-            color: #1abc9c; /* Supabase-like green */
-            margin-bottom: 20px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        input[type="password"] {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        button {
-            width: 100%;
-            padding: 10px;
-            background-color: #1abc9c;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        button:hover {
-            background-color: #148f77;
-        }
-        .message {
-            text-align: center;
-            color: red;
-            margin-top: 10px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reset Password</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background-color: #f4f4f9;
+    }
+    .container {
+      background: #fff;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 400px;
+    }
+    h2 {
+      text-align: center;
+      color: #1abc9c; /* Supabase-like green */
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    input[type="password"] {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      background-color: #1abc9c;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background-color: #148f77;
+    }
+    .message {
+      text-align: center;
+      color: red;
+      margin-top: 10px;
+    }
+  </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Set New Password</h2>
-    <form id="password-reset-form">
-        
-        <label for="password">New Password</label>
-        <input type="password" id="password" required>
-        
-        <label for="confirm-password">Confirm Password</label>
-        <input type="password" id="confirm-password" required>
-        
-        <button type="submit" id="submit-button">Reset Password</button>
-        
-        <p class="message" id="error-message"></p>
-    </form>
+  <h2>Set New Password</h2>
+  <form id="password-reset-form">
+    
+    <label for="password">New Password</label>
+    <input type="password" id="password" required>
+    
+    <label for="confirm-password">Confirm Password</label>
+    <input type="password" id="confirm-password" required>
+    
+    <button type="submit" id="submit-button">Reset Password</button>
+    
+    <p class="message" id="error-message"></p>
+  </form>
 </div>
 
 <!-- 1. Load Supabase JS library -->
@@ -84,8 +84,19 @@
   // 2. Initialize Supabase client with your project URL + anon/public key
   const supabase = window.supabase.createClient(
     "https://yqcxumvpvosrqwbcdcun.supabase.co",   // 🔑 Replace with your Supabase project URL
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlxY3h1bXZwdm9zcnF3YmNkY3VuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0MjU2NDIsImV4cCI6MjA3MDAwMTY0Mn0.gHBxTmOvCCCDqIIZM9gpSvsxvBnUmTRUngcK0pTQ1Tk"                  // 🔑 Replace with your anon/public key
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlxY3h1bXZwdm9zcnF3YmNkY3VuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0MjU2NDIsImV4cCI6MjA3MDAwMTY0Mn0.gHBxTmOvCCCDqIIZM9gpSvsxvBnUmTRUngcK0pTQ1Tk" // 🔑 Replace with your anon/public key
   );
+
+  // 3. Restore session from password recovery link
+  (async () => {
+    const { data, error } = await supabase.auth.getSessionFromUrl({ storeSession: true });
+    if (error) {
+      console.error("Error parsing recovery URL:", error.message);
+      document.getElementById("error-message").textContent = "Error: " + error.message;
+    } else {
+      console.log("✅ Session restored:", data);
+    }
+  })();
 
   const form = document.getElementById('password-reset-form');
   const passwordInput = document.getElementById('password');
@@ -96,7 +107,7 @@
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     errorMessage.textContent = '';
-    
+
     const newPassword = passwordInput.value;
     const confirmPassword = confirmPasswordInput.value;
 
@@ -114,17 +125,14 @@
     submitButton.textContent = 'Resetting...';
 
     try {
-      // 3. Supabase automatically signs user in when they click the recovery link
-      // So here we just update the password
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword
-      });
+      // 4. Now session is valid → update the password
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
 
       if (error) {
         errorMessage.textContent = `Error: ${error.message}`;
       } else {
         alert('🎉 Password successfully reset! You can now log in with your new password.');
-        // Optionally redirect:
+        // Optional: redirect after success
         // window.location.href = "/login.html";
       }
     } catch (err) {
@@ -136,7 +144,6 @@
     }
   });
 </script>
-
 
 </body>
 </html>
