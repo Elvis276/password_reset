@@ -82,24 +82,10 @@
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlxY3h1bXZwdm9zcnF3YmNkY3VuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ0MjU2NDIsImV4cCI6MjA3MDAwMTY0Mn0.gHBxTmOvCCCDqIIZM9gpSvsxvBnUmTRUngcK0pTQ1Tk"
   );
 
-  // Extract token from URL parameters (e.g., from password reset link)
-  const urlParams = new URLSearchParams(window.location.search);
-  const accessToken = urlParams.get('access_token');
-  const refreshToken = urlParams.get('refresh_token');
-
-  // Restore session using the token from the password reset link
+  // Restore session using Supabase password recovery tokens
   async function restoreSession() {
-    if (!accessToken || !refreshToken) {
-      document.getElementById("error-message").textContent = "Invalid or missing password reset token.";
-      return null;
-    }
-
     try {
-      const { data, error } = await supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken,
-      });
-
+      const { data, error } = await supabase.auth.exchangeCodeForSession(window.location.hash);
       if (error) {
         console.error("Session exchange failed:", error.message);
         document.getElementById("error-message").textContent = "Error: " + error.message;
