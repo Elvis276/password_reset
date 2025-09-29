@@ -84,8 +84,21 @@
 
   // Restore session using Supabase password recovery tokens
   async function restoreSession() {
-    const hash = window.location.hash.substring(1); // everything after #
-    const params = new URLSearchParams(hash);
+    try {
+    const { data, error } = await supabase.auth.setSessionFromUrl({ storeSession: true });
+
+    if (error) {
+      console.error("Session restore failed:", error.message);
+      document.getElementById("error-message").textContent = "Error: " + error.message;
+      return null;
+    }
+    console.log("✅ Session restored", data);
+    return data;
+  } catch (err) {
+    console.error("Unexpected error during session restore:", err);
+    document.getElementById("error-message").textContent = "An unexpected error occurred.";
+    return null;
+  }
 
     const accessToken = params.get("access_token");
     const refreshToken = params.get("refresh_token");
